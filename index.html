@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <title>Number Typing Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .leaderboard {
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .play-area {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .play-button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .play-button:hover {
+            background-color: #0056b3;
+        }
+
+        .admin-prompt {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid #007bff;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+
+        .admin-prompt input {
+            width: 90%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .admin-prompt button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .admin-prompt button:hover {
+            background-color: #0056b3;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .emoji-button {
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Number Typing Game</h1>
+    <div class="play-area">
+        <button class="play-button" onclick="startGame('easy')">Easy</button>
+        <button class="play-button" onclick="startGame('medium')">Medium</button>
+        <button class="play-button" onclick="startGame('hard')">Hard</button>
+        <button class="play-button" onclick="startGame('normal')">Normal</button>
+    </div>
+    <button class="emoji-button" onclick="showAdvancedDifficulties()">😊</button>
+
+    <div class="leaderboard">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard-items"></div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="admin-prompt" id="adminPrompt">
+        <h2>Admin Commands</h2>
+        <input type="text" id="adminCommand" placeholder="Enter admin command...">
+        <button onclick="executeAdminCommand()">Execute</button>
+        <button onclick="closeAdminPrompt()">Close</button>
+    </div>
+
+    <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        const leaderboard = [
+            { name: "Player1", streak: 10, rating: 1200, difficulty: "Easy", role: "Good" },
+            { name: "Player2", streak: 65, rating: 1800, difficulty: "Hard", role: "Pro" },
+            { name: "Player3", streak: 500, rating: 3000, difficulty: "Oh My Gawd", role: "Unbeatable" },
+        ];
+
+        const roles = {
+            Good: "color: green;",
+            Pro: "color: blue;",
+            God: "color: purple;",
+            Unbeatable: "color: gold;",
+        };
+
+        function updateLeaderboard() {
+            const leaderboardElement = document.getElementById("leaderboard-items");
+            leaderboardElement.innerHTML = leaderboard.map((player, index) => `
+                <div class="leaderboard-item">
+                    <span>#${index + 1} ${player.name}</span>
+                    <span>${player.streak} Streak</span>
+                    <span>${player.rating} Rating</span>
+                    <span style="${roles[player.role] || ''}">${player.role || ''}</span>
+                    <span>${player.difficulty}</span>
+                </div>
+            `).join("");
+        }
+
+        function startGame(difficulty) {
+            alert(`Starting game on ${difficulty} difficulty!`);
+        }
+
+        function showAdvancedDifficulties() {
+            alert("Advanced difficulties unlocked: Very Hard, Crazy, Ultra Hard, Demoniac, Oh My Gawd!");
+        }
+
+        function onSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            alert(`Welcome, ${profile.getName()}!`);
+        }
+
+        function openAdminPrompt() {
+            document.getElementById("adminPrompt").style.display = "block";
+            document.getElementById("overlay").style.display = "block";
+        }
+
+        function closeAdminPrompt() {
+            document.getElementById("adminPrompt").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+        }
+
+        function executeAdminCommand() {
+            const command = document.getElementById("adminCommand").value;
+            alert(`Executing admin command: ${command}`);
+        }
+
+        document.addEventListener("keydown", (event) => {
+            if (event.ctrlKey && event.altKey && event.key === "z") {
+                openAdminPrompt();
+            }
+        });
+
+        // Initialize the leaderboard on page load
+        updateLeaderboard();
+    </script>
+</body>
+</html>
