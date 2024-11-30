@@ -60,49 +60,22 @@
             background-color: #0056b3;
         }
 
-        .admin-prompt {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            border: 2px solid #007bff;
+        .game-display {
+            margin: 20px;
             padding: 20px;
-            border-radius: 10px;
-            z-index: 1000;
-        }
-
-        .admin-prompt input {
-            width: 90%;
-            padding: 8px;
-            margin: 5px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .admin-prompt button {
-            padding: 8px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .admin-prompt button:hover {
-            background-color: #0056b3;
-        }
-
-        .overlay {
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: white;
+            max-width: 600px;
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+        }
+
+        .game-display input {
+            font-size: 18px;
+            padding: 10px;
+            width: 50%;
+            margin-top: 10px;
         }
 
         .emoji-button {
@@ -116,6 +89,7 @@
 </head>
 <body>
     <h1>Number Typing Game</h1>
+
     <div class="play-area">
         <button class="play-button" onclick="startGame('easy')">Easy</button>
         <button class="play-button" onclick="startGame('medium')">Medium</button>
@@ -129,46 +103,91 @@
         <div id="leaderboard-items"></div>
     </div>
 
-    <div class="overlay" id="overlay"></div>
-    <div class="admin-prompt" id="adminPrompt">
-        <h2>Admin Commands</h2>
-        <input type="text" id="adminCommand" placeholder="Enter admin command...">
-        <button onclick="executeAdminCommand()">Execute</button>
-        <button onclick="closeAdminPrompt()">Close</button>
+    <div class="game-display" id="gameDisplay">
+        <h2 id="difficultyLabel">Difficulty: Easy</h2>
+        <p>Type the following number:</p>
+        <h3 id="targetNumber">12345</h3>
+        <input type="text" id="playerInput" placeholder="Type here..." oninput="checkInput()">
+        <p>Streak: <span id="streakCounter">0</span></p>
     </div>
 
     <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
 
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script>
-        const leaderboard = [
-            { name: "Player1", streak: 10, rating: 1200, difficulty: "Easy", role: "Good" },
-            { name: "Player2", streak: 65, rating: 1800, difficulty: "Hard", role: "Pro" },
-            { name: "Player3", streak: 500, rating: 3000, difficulty: "Oh My Gawd", role: "Unbeatable" },
-        ];
+        const leaderboard = [];
+        let streak = 0;
+        let currentDifficulty = "easy";
+        let targetNumber = "";
+        let rating = 1000;
 
-        const roles = {
-            Good: "color: green;",
-            Pro: "color: blue;",
-            God: "color: purple;",
-            Unbeatable: "color: gold;",
-        };
+        // Generate a random number for the game
+        function generateTargetNumber(length) {
+            return Array.from({ length }, () => Math.floor(Math.random() * 10)).join("");
+        }
 
-        function updateLeaderboard() {
-            const leaderboardElement = document.getElementById("leaderboard-items");
-            leaderboardElement.innerHTML = leaderboard.map((player, index) => `
+        // Start the game with the selected difficulty
+        function startGame(difficulty) {
+            const gameDisplay = document.getElementById("gameDisplay");
+            const difficultyLabel = document.getElementById("difficultyLabel");
+            const targetNumberLabel = document.getElementById("targetNumber");
+
+            streak = 0;
+            currentDifficulty = difficulty;
+            const difficultyLengths = { easy: 5, medium: 8, hard: 12, normal: 10 };
+            const numberLength = difficultyLengths[difficulty] || 5;
+
+            targetNumber = generateTargetNumber(numberLength);
+
+            gameDisplay.style.display = "block";
+            difficultyLabel.textContent = `Difficulty: ${difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}`;
+            targetNumberLabel.textContent = targetNumber;
+            document.getElementById("playerInput").value = "";
+        }
+
+        // Check the player's input
+        function checkInput() {
+            const input = document.getElementById("playerInput").value;
+            if (input === targetNumber) {
+                streak++;
+                rating += currentDifficulty === "hard" ? 50 : 20;
+
+                // Generate a new number and update the UI
+                targetNumber = generateTargetNumber(targetNumber.length);
+                document.getElementById("targetNumber").textContent = targetNumber;
+                document.getElementById("playerInput").value = "";
+                document.getElementById("streakCounter").textContent = streak;
+
+                // Assign role based on streak
+                const role = assignRole(streak);
+                updateLeaderboard(role);
+            }
+        }
+
+        // Assign role based on streak
+        function assignRole(streak) {
+            if (streak >= 500) return "Unbeatable";
+            if (streak >= 100) return "God";
+            if (streak >= 65) return "Pro";
+            if (streak >= 10) return "Good";
+            return null;
+        }
+
+        // Update the leaderboard
+        function updateLeaderboard(role) {
+            leaderboard.push({ name: "You", streak, rating, difficulty: currentDifficulty, role });
+            leaderboard.sort((a, b) => b.streak - a.streak);
+
+            const leaderboardItems = document.getElementById("leaderboard-items");
+            leaderboardItems.innerHTML = leaderboard.map((player, index) => `
                 <div class="leaderboard-item">
                     <span>#${index + 1} ${player.name}</span>
                     <span>${player.streak} Streak</span>
                     <span>${player.rating} Rating</span>
-                    <span style="${roles[player.role] || ''}">${player.role || ''}</span>
+                    <span>${player.role || ''}</span>
                     <span>${player.difficulty}</span>
                 </div>
             `).join("");
-        }
-
-        function startGame(difficulty) {
-            alert(`Starting game on ${difficulty} difficulty!`);
         }
 
         function showAdvancedDifficulties() {
@@ -180,29 +199,8 @@
             alert(`Welcome, ${profile.getName()}!`);
         }
 
-        function openAdminPrompt() {
-            document.getElementById("adminPrompt").style.display = "block";
-            document.getElementById("overlay").style.display = "block";
-        }
-
-        function closeAdminPrompt() {
-            document.getElementById("adminPrompt").style.display = "none";
-            document.getElementById("overlay").style.display = "none";
-        }
-
-        function executeAdminCommand() {
-            const command = document.getElementById("adminCommand").value;
-            alert(`Executing admin command: ${command}`);
-        }
-
-        document.addEventListener("keydown", (event) => {
-            if (event.ctrlKey && event.altKey && event.key === "z") {
-                openAdminPrompt();
-            }
-        });
-
-        // Initialize the leaderboard on page load
-        updateLeaderboard();
+        // Initialize the leaderboard
+        updateLeaderboard(null);
     </script>
 </body>
 </html>
